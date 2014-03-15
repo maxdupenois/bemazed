@@ -1,0 +1,21 @@
+{
+  "name": "Bemazed",
+  "version": "0.0.1",
+  "description": "Simple maze game",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:maxdupenois/bemazed.git"
+  },
+  "keywords": [
+    "maze",
+    "game",
+    "hmtl5",
+    "javascript"
+  ],
+  "author": "Max Dupenois",
+  "license": "BSD"
+}
