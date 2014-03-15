@@ -3,7 +3,7 @@ var express = require('express')
   , url = require('url')
   , fs = require("fs")
   , app = express()
-  , server = require('http').createServer(app).listen(default_port)
+  , server = require('http').createServer(app)
   , io = require('engine.io').attach(server)
   , logfmt = require('logfmt')
   ;
