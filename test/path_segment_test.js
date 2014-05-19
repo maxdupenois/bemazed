@@ -3,10 +3,13 @@ var PathSegment = require('../lib/path_segment'),
     expect = require('chai').expect;
 
 describe("PathSegment", function(){
-  var start, finish, subject;
+  var start, finish, subject, wildPoint, pointOnLeft, pointOnRight;
   before(function(){
     start = Point.create(10, 20);
     finish = Point.create(20, 30);
+    pointOnRight = Point.create(15, 20);
+    pointOnLeft = Point.create(10, 25);
+    wildPoint = Point.create(100, 0);
     subject = PathSegment.create(start, finish);
   });
 
@@ -23,12 +26,59 @@ describe("PathSegment", function(){
     });
   });
 
+  describe("#isPointLeftfSegment", function(){
+    describe("when the point is on the left of the segment", function(){
+      it("should return true", function(){
+        expect(subject.isPointLeftOfSegment(pointOnLeft)).to.be.true;
+      });
+    });
+
+    describe("when the point is not on the left of the segment", function(){
+      it("should return false", function(){
+        expect(subject.isPointLeftOfSegment(pointOnRight)).to.be.false;
+      });
+    });
+  });
+
+  describe("#isPointRightOfSegment", function(){
+    describe("when the point is on the right of the segment", function(){
+      it("should return true", function(){
+        expect(subject.isPointRightOfSegment(pointOnRight)).to.be.true;
+      });
+    });
+
+    describe("when the point is not on the right of the segment", function(){
+      it("should return false", function(){
+        expect(subject.isPointRightOfSegment(pointOnLeft)).to.be.false;
+      });
+    });
+  });
+
+  describe("#containsPoint", function(){
+    describe("when the point is on the segment", function(){
+      it("should return true", function(){
+        var pointOnLine = subject.pointAt(1.5);
+        expect(subject.containsPoint(pointOnLine)).to.be.true;
+      });
+    });
+
+    describe("when the point not on the segment", function(){
+      it("should return false", function(){
+        expect(subject.containsPoint(wildPoint)).to.be.false;
+      });
+    });
+  });
+
+  describe("#split", function(){
+  });
+
   describe("#pointAt", function(){
     describe("when the line is greater than or equal to 0 and less than the line length", function(){
       it("should return the point on the line the given distance from the start point", function(){
         var point = subject.pointAt(subject.length / 2);
-        expect(point.x).to.equal((start.x + finish.x) / 2);
-        expect(point.y).to.equal((start.y + finish.y) / 2);
+        var midpoint = start.midpoint(finish);
+        expect(point.x).to.equal(midpoint.x);
+        expect(point.y).to.equal(midpoint.y);
       });
     });
 
