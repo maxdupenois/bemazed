@@ -40,6 +40,18 @@ describe("PathSegment", function(){
     });
   });
 
+  describe("#split", function(){
+    it("should split the segment into two parts using the given point as a new finish and start", function(){
+      var splitPoint = Point.create(10, 25);
+      var segments = subject.split(splitPoint);
+      expect(segments.length).to.eq(2);
+      expect(segments[0].start).to.eq(subject.start);
+      expect(segments[0].finish).to.eq(splitPoint);
+      expect(segments[1].start).to.eq(splitPoint);
+      expect(segments[1].finish).to.eq(subject.finish);
+    });
+  });
+
   describe("#isPointRightOfSegment", function(){
     describe("when the point is on the right of the segment", function(){
       it("should return true", function(){
