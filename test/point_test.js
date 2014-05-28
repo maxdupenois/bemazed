@@ -13,6 +13,13 @@ describe("Point", function(){
     });
   });
 
+  describe("#manhattanDistance", function(){
+    it("should calculate the manhattan distance between two points", function(){
+      var point2 = Point.create(3, 4);
+      expect(point.manhattanDistance(point2)).to.equal(7);
+    });
+  });
+
   describe("#perturb", function(){
     it("should create a new point with different coordinates", function(){
       var perturbed = point.perturb();

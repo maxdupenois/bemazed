@@ -1,18 +1,33 @@
-var default_port = 5000;
 var express = require('express')
+  , fs = require('fs')
   , url = require('url')
-  , fs = require("fs")
-  , app = express()
-  , server = require('http').createServer(app)
-  , io = require('engine.io').attach(server)
-  , logfmt = require('logfmt')
+  , path = require('path')
+  , favicon = require('serve-favicon')
+  , logger = require('morgan')
+  , cookieParser = require('cookie-parser')
+  , bodyParser = require('body-parser')
+  //hmm
+  //, server = require('http').createServer(app)
+  //, io = require('engine.io').attach(server)
   ;
 
+var routes = require('./routes/index');
 
-app.configure(function(){
-});
+var app = express();
 
-app.use(logfmt.requestLogger());
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'jade');
+
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.use(logger('dev'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded());
+app.use(cookieParser());
+app.use(require('less-middleware')(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use('/', routes);
 
 app.use(function(req, res, next){  
   // DEBUG CODE GOES HERE
@@ -21,12 +36,4 @@ app.use(function(req, res, next){
 });
 
 
-app.get('/', function(req, res, next){
-  res.send('hello there');
-});
-
-
-server.listen(process.env.PORT || default_port, function(){
-  console.log('\033[90mlistening on localhost:'+default_port+' \033[39m');
-});
-
+module.exports = app;

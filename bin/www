@@ -1,0 +1,8 @@
+#!/usr/bin/env node
+var debug = require('debug')('Bemazed'),
+    app = require('../app');
+ 
+app.set('port', process.env.PORT || 5000);
+var server = app.listen(app.get('port'), function(){
+  debug('\033[90mlistening on localhost:'+app.get('port')+' \033[39m');
+});
