@@ -5,22 +5,378 @@ var Utils = require('../utils.js'),
 var Canvas = {};
 Canvas.fn = {};
 
+Canvas.fn.attach = function(){
+  this.$container.empty();
+  this.$container.append(this.$canvas);
+};
+
+Canvas.fn.graphics = function(){
+  return this.$canvas[0].getContext("2d");
+};
+
 Canvas.create = function(containerSelector){
-  console.log($(containerSelector));
+  var canvas = {};
+  canvas.$container = $(containerSelector);
+  canvas.$canvas = $('<canvas/>').attr({
+    width: 500,
+    height: 500
+  });
+  Utils.addInstanceFunctions(Canvas.fn, canvas);
+  return canvas;
 };
 
 exports.create = Canvas.create;
 
-},{"../utils.js":3,"jquery":4}],2:[function(require,module,exports){
+},{"../utils.js":10,"jquery":11}],2:[function(require,module,exports){
 var $ = require('jquery'),
+    Maze = require('../maze.js'),
+    MazeView = require('./maze_view.js'),
     Canvas = require('./canvas');
 
 $(function(){
-  console.log("HERE");
-  Canvas.create('#hello');
+  var canvas = Canvas.create('#canvas-container');
+  canvas.attach();
+  var maze = Maze.create(500, 500);
+  maze.mazify(5);
+  var mazeView = MazeView.create(maze);
+  mazeView.draw(canvas.graphics());
 });
 
-},{"./canvas":1,"jquery":4}],3:[function(require,module,exports){
+},{"../maze.js":6,"./canvas":1,"./maze_view.js":3,"jquery":11}],3:[function(require,module,exports){
+var Utils = require('../utils.js'),
+    PathView = require('./path_view.js'),
+    $ = require('jquery');
+
+var MazeView = {};
+MazeView.fn = {};
+
+MazeView.fn.draw = function(g){
+  PathView.create(this.maze.path).draw(g);
+};
+
+MazeView.create = function(maze){
+  var mazeView = {};
+  mazeView.maze = maze;
+  Utils.addInstanceFunctions(MazeView.fn, mazeView);
+  return mazeView;
+};
+
+exports.create = MazeView.create;
+
+},{"../utils.js":10,"./path_view.js":5,"jquery":11}],4:[function(require,module,exports){
+var Utils = require('../utils.js'),
+    $ = require('jquery');
+
+var PathSegmentView = {};
+PathSegmentView.fn = {};
+
+PathSegmentView.fn.draw = function(g){
+  var originalStrokeStyle = g.strokeStyle;
+  var originalLineWidth = g.lineWidth;
+  g.strokeStyle = "#000";
+  g.beginPath();
+  g.moveTo(this.pathSegment.start.x, this.pathSegment.start.y);
+  g.lineTo(this.pathSegment.finish.x, this.pathSegment.finish.y);
+  g.stroke();
+  g.closePath();
+  g.strokeStyle = originalStrokeStyle;
+  g.lineWidth = originalLineWidth;
+};
+
+PathSegmentView.create = function(pathSegment){
+  var pathSegmentView = {};
+  pathSegmentView.pathSegment = pathSegment;
+  Utils.addInstanceFunctions(PathSegmentView.fn, pathSegmentView);
+  return pathSegmentView;
+};
+
+exports.create = PathSegmentView.create;
+
+},{"../utils.js":10,"jquery":11}],5:[function(require,module,exports){
+var Utils = require('../utils.js'),
+    PathSegmentView = require('./path_segment_view.js'),
+    $ = require('jquery');
+
+var PathView = {};
+PathView.fn = {};
+
+PathView.fn.draw = function(g){
+  this.path.pathSegments.forEach(function(pathSegment, index){
+    PathSegmentView.create(pathSegment).draw(g);
+  });
+};
+
+PathView.create = function(path){
+  var pathView = {};
+  pathView.path = path;
+  Utils.addInstanceFunctions(PathView.fn, pathView);
+  return pathView;
+};
+
+exports.create = PathView.create;
+
+},{"../utils.js":10,"./path_segment_view.js":4,"jquery":11}],6:[function(require,module,exports){
+var Utils = require('./utils'),
+    PathSegment = require('./path_segment'),
+    Path = require('./path'),
+    Point = require('./point');
+
+var Maze = {};
+Maze.fn = {};
+
+Maze.fn.mazify = function(numberOfActions){
+  if(!numberOfActions) var numberOfActions = 10;
+  for(var i = 0; i < numberOfActions; i++){
+    this.path.perturb().branch();
+  }
+  return this;
+};
+
+var generateEndPoints = function(){
+  //Imagine a grid overlaying the
+  //maze of 9 grids, the start must appear at least 3
+  //grids away from the finish
+  // 0,0 0,1 0,2
+  // 1,0 1,1 1,2
+  // 2,0 2,1 2,2
+
+  var x, y, startCell, finishCell, manhattanDistance;
+  do{
+    x = Utils.randInt(2);
+    y = Utils.randInt(2);
+  }while(x == 1 || y == 1);
+  startCell = Point.create(x, y);
+
+  do{
+    x = Utils.randInt(2);
+    y = Utils.randInt(2);
+    finishCell = Point.create(x, y);
+    manhattanDistance = startCell.manhattanDistance(finishCell);
+  }while(manhattanDistance < 3);
+
+  this.start = getPointFromCell.call(this, startCell);
+  this.finish = getPointFromCell.call(this, finishCell);
+};
+
+var getPointFromCell = function(cell){
+  var minX, maxX, minY, maxY, cellWidth, cellHeight;
+  cellWidth = this.width / 3.0;
+  cellHeight = this.height / 3.0;
+
+  minX = cell.x * cellWidth;
+  maxX = minX + cellWidth;
+  minY = cell.y * cellHeight;
+  maxY = minY + cellHeight;
+
+  return Point.create(
+    Utils.randInt(Math.floor(minX), Math.ceil(maxX)),
+    Utils.randInt(Math.floor(minY), Math.ceil(maxY))
+  );
+};
+
+Maze.create = function(width, height){
+  var maze = {
+    width: width,
+    height: height
+  };
+  generateEndPoints.call(maze);
+  maze.path = Path.create(maze.start, maze.finish);
+  Utils.addInstanceFunctions(Maze.fn, maze);
+  return maze;
+};
+exports.create = Maze.create;
+
+},{"./path":7,"./path_segment":8,"./point":9,"./utils":10}],7:[function(require,module,exports){
+var Utils = require('./utils'),
+    PathSegment = require('./path_segment'),
+    Point = require('./point');
+
+var Path = {};
+Path.fn = {};
+Path.branchRange = 50;
+Path.branchChance = 0.4;
+
+Path.fn.branch = function(opts){
+  if(!opts) var opts = {};
+  opts.branchRange = opts.branchRange || Path.branchRange;
+  opts.branchChance = opts.branchChance || Path.branchChance;
+
+  var newSegments = [];
+  var me = this;
+  this.pathSegments.forEach(function(path, index){
+    var pathFinish, branch;
+    newSegments.push(path);
+    //Skip last
+    if(index == me.pathSegments.length - 1) return;
+    if(Math.random() > opts.branchChance) return;
+
+    pathFinish = Point.create(
+      path.finish.x + Utils.randNormal() * opts.branchRange,
+      path.finish.y + Utils.randNormal() * opts.branchRange
+    );
+    branch = PathSegment.create(path.finish, pathFinish);
+    newSegments.push(branch);
+  });
+  this.pathSegments = newSegments;
+  return this;
+};
+
+Path.fn.perturb = function(){
+  var newSegments = [];
+  this.pathSegments.forEach(function(pathSegment){
+    var newPoint = pathSegment.midpoint().perturb(20);
+    var split = pathSegment.split(newPoint);
+    newSegments.push(split[0]);
+    newSegments.push(split[1]);
+  });
+  this.pathSegments = newSegments;
+  return this;
+};
+
+Path.create = function(start, finish){
+  var path = {};
+  path.start = start;
+  path.finish = finish;
+  path.pathSegments = [PathSegment.create(start, finish)];
+  Utils.addInstanceFunctions(Path.fn, path);
+  return path;
+};
+exports.create = Path.create;
+
+},{"./path_segment":8,"./point":9,"./utils":10}],8:[function(require,module,exports){
+var Utils = require('./utils'),
+    Point = require('./point');
+
+var PathSegment = {};
+PathSegment.fn = {};
+PathSegment.ROUNDING_ERROR = Math.pow(10, -10);
+
+PathSegment.fn.containsPoint = function(point){
+  if (!isPointInBounds.call(this, point)) return false;
+  var signOfAcuteAngle = this.start.crossProduct(this.finish, point);
+  return Math.abs(signOfAcuteAngle) < PathSegment.ROUNDING_ERROR;
+};
+
+var isPointInBounds = function(point){
+  return(
+    point.x >= Math.min(this.start.x, this.finish.x) &&
+    point.y >= Math.min(this.start.y, this.finish.y) &&
+    point.x <= Math.max(this.start.x, this.finish.x) &&
+    point.y <= Math.max(this.start.y, this.finish.y)
+    );
+};
+
+PathSegment.fn.isPointRightOfSegment = function(point){
+  var signOfAcuteAngle = this.start.crossProduct(this.finish, point);
+  return signOfAcuteAngle < -PathSegment.ROUNDING_ERROR;
+};
+
+PathSegment.fn.isPointLeftOfSegment = function(point){
+  var signOfAcuteAngle = this.start.crossProduct(this.finish, point);
+  return signOfAcuteAngle > PathSegment.ROUNDING_ERROR;
+};
+
+PathSegment.fn.midpoint = function(){
+  return this.start.midpoint(this.finish);
+};
+
+PathSegment.fn.split = function(point){
+  return [
+    create(this.start, point),
+    create(point, this.finish)
+  ];
+};
+
+PathSegment.fn.pointAt = function(length){
+  if(length > this.length) return null;
+  if(length < 0) return null;
+  var pointX, pointY,
+    xDiff = this.finish.x - this.start.x,
+    yDiff = this.finish.y - this.start.y,
+    proportion = length / this.length;
+  pointX = this.start.x + (proportion * xDiff);
+  pointY = this.start.y + (proportion * yDiff);
+  return Point.create(pointX, pointY);
+};
+
+
+var create = function(start, finish){
+  var path_segment = {};
+  Utils.addInstanceFunctions(PathSegment.fn, path_segment);
+  path_segment.start = start;
+  path_segment.finish = finish;
+  path_segment.length = start.distance(finish);
+  return path_segment;
+};
+exports.create = create;
+
+},{"./point":9,"./utils":10}],9:[function(require,module,exports){
+var Utils = require('./utils');
+
+var Point = {};
+Point.fn = {};
+
+Point.fn.perturb = function(multiplier){
+  if(!multiplier) var multiplier = 1;
+  var newx, newy;
+  newx = (Utils.randNormal() * multiplier) + this.x;
+  newy = (Utils.randNormal() * multiplier) + this.y;
+  return Point.create(newx, newy);
+};
+
+Point.fn.manhattanDistance = function(point2){
+  return Math.abs(point2.x - this.x) + Math.abs(point2.y - this.y);
+};
+
+Point.fn.distance = function(point2){
+  return Math.sqrt(
+    Math.pow(this.x - point2.x, 2) + Math.pow(this.y - point2.y, 2)
+  );
+};
+
+Point.fn.toString = function(){
+  return "("+this.x+", "+this.y+")";
+};
+
+Point.fn.midpoint = function(point2){
+  return Point.create(
+      (this.x + point2.x) / 2.0,
+      (this.y + point2.y) / 2.0
+      );
+};
+
+Point.fn.magnitude = function(){
+  return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
+};
+
+Point.fn.angleTo = function(point2){
+  //Using the dot product
+  //A.B = ||A||*||B||cos(theta)
+  var magintudes = this.magnitude() * point2.magnitude(),
+      cos_theta = this.dotProduct(point2) / magnitudes;
+  return Math.acos(cos_theta);
+};
+
+Point.fn.dotProduct = function(point2){
+  return this.x * point2.x + this.y * point2.y;
+};
+
+Point.fn.crossProduct = function(point2, point3){
+  //Techincally not really a cross product as it gives a scalar result
+  return (point2.x - this.x) * (point3.y - this.y) -
+          (point3.x - this.x) * (point2.y - this.y);
+};
+
+Point.create = function(x, y){
+  var point = {};
+  Utils.addInstanceFunctions(Point.fn, point);
+  point.x = x;
+  point.y = y;
+  return point;
+};
+exports.create = Point.create;
+
+},{"./utils":10}],10:[function(require,module,exports){
 var Utils = {};
 Utils.addInstanceFunctions = function(instanceFunctions, instance){
   for(var key in instanceFunctions){
@@ -76,7 +432,7 @@ exports.simpleRandNormal = function(){
 };
 
 
-},{}],4:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.1
  * http://jquery.com/
