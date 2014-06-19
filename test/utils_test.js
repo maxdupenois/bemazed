@@ -41,6 +41,28 @@ describe("Utils", function(){
     return Math.sqrt(variance(arrOfNums));
   };
 
+//  it("should produce a 0, 1 and 2", function(){
+//    var val, seen0 = false, seen1 = false, seen2 = false;
+//    for(var i= 0; i < 100; i++){
+//      val = Utils.randInt(2)
+//      seen0 = (seen0 || val == 0);
+//      seen1 = (seen1 || val == 1);
+//      seen2 = (seen2 || val == 2);
+//    }
+//    expect(seen0).to.be.true;
+//    expect(seen1).to.be.true;
+//    expect(seen2).to.be.true;
+//  });
+
+  describe("#shuffle", function(){
+    it("should shuffle the passed array", function(){
+      var arr = [ 'a', 'b', 'c', 'd' ];
+      var shuffled = Utils.shuffle(arr);
+      expect(arr.length).to.eq(shuffled.length);
+      expect(arr).to.not.eq(shuffled);
+    });
+  });
+
   describe("#randNormal", function(){
     var randomNumbers, tolerance;
     before(function(){
