@@ -20,6 +20,7 @@
   "author": "Max Dupenois",
   "license": "BSD",
   "dependencies": {
+    "backbone": "^1.1.2",
     "body-parser": "^1.2.0",
     "cookie-parser": "^1.1.0",
     "debug": "^0.8.1",
@@ -31,7 +32,8 @@
     "less-middleware": "^1.0.3",
     "logfmt": "^0.23.0",
     "morgan": "^1.1.1",
-    "serve-favicon": "^2.0.0"
+    "serve-favicon": "^2.0.0",
+    "underscore": "^1.7.0"
   },
   "devDependencies": {
     "browserify": "^4.1.5",

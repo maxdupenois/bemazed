@@ -4,18 +4,18 @@ var Point = require('../lib/point'),
 describe("Point", function(){
 
   var point;
-  before(function(){ point = Point.create(0, 0); });
+  before(function(){ point = new Point(0, 0); });
 
   describe("#distance", function(){
     it("should calculate the distance between two points", function(){
-      var point2 = Point.create(3, 4);
+      var point2 = new Point(3, 4);
       expect(point.distance(point2)).to.equal(5);
     });
   });
 
   describe("#manhattanDistance", function(){
     it("should calculate the manhattan distance between two points", function(){
-      var point2 = Point.create(3, 4);
+      var point2 = new Point(3, 4);
       expect(point.manhattanDistance(point2)).to.equal(7);
     });
   });
@@ -36,7 +36,7 @@ describe("Point", function(){
 
   describe("#midpoint", function(){
     it("should return the midpoint of two points", function(){
-      var point2 = Point.create(10, 20);
+      var point2 = new Point(10, 20);
       var midpoint = point.midpoint(point2);
       expect(midpoint.x).to.equal(5);
       expect(midpoint.y).to.equal(10);
